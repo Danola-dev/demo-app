@@ -1,13 +1,53 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:demo_app/providers/brand_filter_provider.dart';
 import 'package:demo_app/widgets/shoe_grid_item.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  String? name;
+  String? image;
+  @override
+  void initState() {
+    super.initState();
+    getUsername();
+    getUserimage();
+  }
+
+  Future<void> getUsername() async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
+
+    setState(() {
+      name = doc['username'];
+    });
+  }
+
+  Future<void> getUserimage() async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final doc = await FirebaseFirestore.instance
+        .collection('user_img')
+        .doc(uid)
+        .get();
+
+    setState(() {
+      image = doc['image_url'];
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final filteredShoes = ref.watch(filteredShoesProvider);
     final selectedBrand = ref.watch(selectedBrandProvider);
     return Scaffold(
@@ -23,7 +63,7 @@ class HomeScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Hi Dani',
+                      name == null ? '' : 'Hi $name',
                       style: TextStyle(
                         fontSize: 19,
                         fontWeight: FontWeight.w600,
@@ -39,7 +79,10 @@ class HomeScreen extends ConsumerWidget {
                   ],
                 ),
                 Spacer(),
-                CircleAvatar(backgroundColor: Colors.grey, radius: 50),
+                CircleAvatar(
+                  backgroundImage: NetworkImage(image == null ? '' : image!),
+                  radius: 50,
+                ),
               ],
             ),
             SizedBox(height: 23),

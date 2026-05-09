@@ -25,24 +25,30 @@ class _TabsScreenState extends ConsumerState<TabsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Widget activepage = HomeScreen();
     final cartItems = ref.watch(cartProvider);
+    var favoriteShoes = ref.watch(favoriteShoeProvider);
 
     if (pageIndex == 1) {
-      var favoriteShoes = ref.watch(favoriteShoeProvider);
-      activepage = SavedScreen(shoes: favoriteShoes);
+      SavedScreen(shoes: favoriteShoes);
     }
 
     if (pageIndex == 2) {
-      var shoeCart = ref.watch(cartProvider);
-      activepage = CartScreen(shoes: shoeCart);
+      CartScreen(shoes: cartItems);
     }
 
     if (pageIndex == 3) {
-      activepage = ProfileScreen();
+      ProfileScreen();
     }
     return Scaffold(
-      body: activepage,
+      body: IndexedStack(
+        index: pageIndex,
+        children: [
+          HomeScreen(),
+          SavedScreen(shoes: favoriteShoes),
+          CartScreen(shoes: cartItems),
+          ProfileScreen(),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         selectedItemColor: Colors.blue,
         showUnselectedLabels: true,

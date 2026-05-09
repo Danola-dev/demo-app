@@ -14,7 +14,12 @@ class ProfileScreen extends StatelessWidget {
         child: Column(
           children: [
             UserImagePicker(
-              onPickedImage: (pickedImage) => selectedImage = pickedImage,
+              onPickedImage: (pickedImage) {
+                if (selectedImage == null) {
+                  return;
+                }
+                selectedImage = pickedImage;
+              },
             ),
             SizedBox(height: 40),
             Column(
@@ -51,7 +56,7 @@ class ProfileScreen extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ], 
+                        ],
                       ),
                     ),
                   ),

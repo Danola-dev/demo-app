@@ -1,6 +1,7 @@
 import 'package:demo_app/widgets/wavy.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key, reu});
@@ -39,6 +40,12 @@ class _AuthScreenState extends State<AuthScreen> {
           email: enteredEmail,
           password: enteredPassword,
         );
+
+        // storing the new user data on firestore
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set({'username': enteredName, 'email': enteredEmail});
       }
     } on FirebaseAuthException catch (error) {
       if (error.code == 'email-already-in-use') {

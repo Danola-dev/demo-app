@@ -1,6 +1,9 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:demo_app/widgets/wavy.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -15,8 +18,15 @@ class UserImagePicker extends StatefulWidget {
 
 class UserImagePickerState extends State<UserImagePicker> {
   File? pickedImageFile;
+  String? imageUrl;
 
-  void pickedImage() async {
+  @override
+  void initState() {
+    super.initState();
+    getUserimage();
+  }
+
+  Future<void> pickedImage() async {
     final pickedImage = await ImagePicker().pickImage(
       source: ImageSource.gallery,
       imageQuality: 50,
@@ -31,6 +41,38 @@ class UserImagePickerState extends State<UserImagePicker> {
       pickedImageFile = File(pickedImage.path);
     });
     widget.onPickedImage(pickedImageFile!);
+
+    // storing the picked image on firebase storage
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
+    final storageRef = FirebaseStorage.instance.ref().child(
+      'profile_image/$uid.jpg',
+    );
+
+    await storageRef.putFile(pickedImageFile!);
+
+    final downloadUrl = await storageRef.getDownloadURL();
+
+    await FirebaseFirestore.instance.collection('user_img').doc(uid).set({
+      'image_url': downloadUrl,
+    });
+
+    setState(() {
+      imageUrl = downloadUrl;
+    });
+  }
+
+  // getting the stored image to display always
+  Future<void> getUserimage() async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final doc = await FirebaseFirestore.instance
+        .collection('user_img')
+        .doc(uid)
+        .get();
+
+    setState(() {
+      imageUrl = doc['image_url'];
+    });
   }
 
   @override
@@ -61,9 +103,8 @@ class UserImagePickerState extends State<UserImagePicker> {
             children: [
               CircleAvatar(
                 radius: 80,
-                backgroundColor: Colors.grey,
-                foregroundImage: pickedImageFile != null
-                    ? FileImage(pickedImageFile!)
+                backgroundImage: imageUrl != null
+                    ? NetworkImage(imageUrl!)
                     : null,
               ),
               Positioned(
